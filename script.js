@@ -62,6 +62,7 @@ for (const plant of PLANTS) {
   const vegetable = makeCrop("vegetable", plant.vegetable);
 
   let grownAt = 0; // timestamp of the last grow, to ignore the same gesture's click
+  let armed = true; // mouse must (re)enter the flower from outside before hover grows it
 
   const sync = () => {
     const grown = el.dataset.state === "vegetable";
@@ -82,8 +83,9 @@ for (const plant of PLANTS) {
     hidden.tabIndex = -1;
   };
 
-  const grow = () => {
+  const grow = (viaHover) => {
     if (el.dataset.state === "vegetable") return; // one-way via hover
+    if (viaHover && !armed) return; // don't let a just-reverted plant re-grow under the cursor
     el.dataset.state = "vegetable";
     grownAt = performance.now();
     sync();
@@ -92,18 +94,25 @@ for (const plant of PLANTS) {
   const revert = () => {
     if (el.dataset.state === "flower") return;
     el.dataset.state = "flower";
+    // The cursor is still over the flower after reverting; require it to leave
+    // and re-enter before a hover can grow it again (fixes the re-grow bounce,
+    // worst on the tomato where the flower box covers most of the vegetable).
+    armed = false;
     sync();
   };
 
   // Flower -> vegetable. Mouse: on hover. Touch/pen: on tap (the click below).
   flower.addEventListener("pointerenter", (e) => {
-    if (e.pointerType === "mouse") grow();
+    if (e.pointerType === "mouse") grow(true);
   });
-  flower.addEventListener("click", grow); // touch tap; harmless no-op for mouse
+  flower.addEventListener("pointerleave", (e) => {
+    if (e.pointerType === "mouse") armed = true; // re-arm once the cursor leaves
+  });
+  flower.addEventListener("click", () => grow(false)); // touch tap / deliberate click
   flower.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      grow();
+      grow(false);
     }
   });
 
