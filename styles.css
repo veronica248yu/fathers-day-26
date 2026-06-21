@@ -1,0 +1,93 @@
+:root {
+  /* background.png is 3840x2160 -> exact 16:9. Keep the stage at that ratio so
+     it fills with no letterboxing and the crop percentages line up at any size. */
+  --stage-ratio: 16 / 9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  background: #faf8eb;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.garden {
+  width: min(100vw, calc(100vh * 16 / 9));
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+/* Positioning context for the background + crops. */
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--stage-ratio);
+}
+
+/* The always-visible leaves/stems background, filling the stage. */
+.layer--base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* A plant is just a positioning context spanning the stage; it never captures
+   pointer events, so it can't shadow a crop from another plant beneath it. */
+.plant {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Close-cropped flower/vegetable images. left/top/width are set inline by JS
+   (percent of the stage); height stays auto to preserve each crop's aspect. */
+.crop {
+  position: absolute;
+  height: auto;
+  opacity: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none; /* only the currently-shown crop is interactive */
+  transition: opacity 600ms ease;
+}
+
+/* Show + arm whichever crop matches the current state. */
+.plant[data-state="flower"] .crop--flower,
+.plant[data-state="vegetable"] .crop--vegetable {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.crop:focus-visible {
+  outline: 3px solid #2f7d4f;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ?debug -> outline the crop boxes while checking placement. */
+.stage.is-debug .crop {
+  outline: 2px dashed #e22;
+  opacity: 1; /* reveal both states' boxes at once */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crop {
+    transition: none;
+  }
+}
