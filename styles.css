@@ -18,7 +18,7 @@ body {
   min-height: 100%;
   display: grid;
   place-items: center;
-  background: #ffffff;
+  background: #fff;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
